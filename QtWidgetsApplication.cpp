@@ -268,13 +268,13 @@ void QtWidgetsApplication::IniUI()
 	m_ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
 
-	 // 创建一个数据库连接
+	// 创建一个数据库连接
 	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-	db.setDatabaseName("db/mytestdb.sqlite"); 
+	db.setDatabaseName("db/mytestdb.sqlite");
 	db.setConnectOptions("QSQLITE_OPEN_URI;QSQLITE_ENABLE_SHARED_CACHE=1;UTF8=1"); // 设置连接选项
 
 	// 打开数据库
-	if (db.open()) 
+	if (db.open())
 	{
 		m_ui->label->setText(QStringLiteral("数据库链接成功"));
 		connect(m_ui->pushButton_insert, &QPushButton::clicked, this, [=]
@@ -307,14 +307,14 @@ void QtWidgetsApplication::IniUI()
 						int random3 = QRandomGenerator::global()->bounded(3001);
 
 						QString insertQuery = QString("INSERT INTO %1 (No, Random1, Random2, Random3) VALUES (%2, %3, %4, %5)")
-							.arg(tableName).arg(i+1).arg(random1).arg(random2).arg(random3);
+							.arg(tableName).arg(i + 1).arg(random1).arg(random2).arg(random3);
 
 						if (!query.exec(insertQuery)) {
 							m_ui->label->setText(QStringLiteral("插入数据失败"));
 							break;
 						}
 						myWidget->updateProgress();
-						m_ui->progressBar->setValue((i + 1)/10);//设置进度条
+						m_ui->progressBar->setValue((i + 1) / 10);//设置进度条
 						this->update();
 					}
 					m_ui->label->setText(QStringLiteral("插入数据成功"));
@@ -323,62 +323,62 @@ void QtWidgetsApplication::IniUI()
 					m_ui->label->setText(QStringLiteral("数据库表1添加失败"));
 				}
 			});
-			//sort
-			connect(m_ui->pushButton_sort, &QPushButton::clicked, this, [=]
+		//sort
+		connect(m_ui->pushButton_sort, &QPushButton::clicked, this, [=]
+			{
+				// 执行遍历和排序的操作
+				QSqlQuery query;
+				QString tableName = "databast_table_1";
+
+				if (db.tables().contains(tableName))
 				{
-					// 执行遍历和排序的操作
-					QSqlQuery query;
-					QString tableName = "databast_table_1";
+					QList<QList<QVariant>> rows; // 用于存储要排序的行的列表
 
-					if (db.tables().contains(tableName))
+					QString selectQuery = "SELECT * FROM " + tableName;
+					if (query.exec(selectQuery))
 					{
-						QList<QList<QVariant>> rows; // 用于存储要排序的行的列表
-
-						QString selectQuery = "SELECT * FROM " + tableName;
-						if (query.exec(selectQuery))
+						while (query.next())
 						{
-							while (query.next())
+							QList<QVariant> row;
+							for (int i = 0; i < 4; ++i)
 							{
-								QList<QVariant> row;
-								for (int i = 0; i < 4; ++i)
-								{
-									row.append(query.value(i));
-								}
-								rows.append(row);
+								row.append(query.value(i));
 							}
-							std::sort(rows.begin(), rows.end(), [](const QList<QVariant>& a, const QList<QVariant>& b)
-								{
-									return a[2].toInt() > b[2].toInt();
-								});
-							QString clearQuery = "DELETE FROM " + tableName;
-							if (query.exec(clearQuery))
+							rows.append(row);
+						}
+						std::sort(rows.begin(), rows.end(), [](const QList<QVariant>& a, const QList<QVariant>& b)
 							{
-								// 重新插入
-								int i = 0;
-								for (const QList<QVariant>& row : rows)
-								{
-									QString insertQuery = QString("INSERT INTO %1 (No, Random1, Random2, Random3) VALUES (%2, %3, %4, %5)")
-										.arg(tableName).arg(row[0].toInt()).arg(row[1].toInt())
-										.arg(row[2].toInt()).arg(row[3].toInt());
+								return a[2].toInt() > b[2].toInt();
+							});
+						QString clearQuery = "DELETE FROM " + tableName;
+						if (query.exec(clearQuery))
+						{
+							// 重新插入
+							int i = 0;
+							for (const QList<QVariant>& row : rows)
+							{
+								QString insertQuery = QString("INSERT INTO %1 (No, Random1, Random2, Random3) VALUES (%2, %3, %4, %5)")
+									.arg(tableName).arg(row[0].toInt()).arg(row[1].toInt())
+									.arg(row[2].toInt()).arg(row[3].toInt());
 
-									if (!query.exec(insertQuery)) {
-										m_ui->label->setText(QStringLiteral("插入数据失败"));
-										break;
-									}
-									myWidget->updateProgress();
-									m_ui->progressBar->setValue((i + 1) / 10);//设置进度条
-									this->update();
-									i++;
+								if (!query.exec(insertQuery)) {
+									m_ui->label->setText(QStringLiteral("插入数据失败"));
+									break;
 								}
-								m_ui->label->setText(QStringLiteral("重新排序成功"));
+								myWidget->updateProgress();
+								m_ui->progressBar->setValue((i + 1) / 10);//设置进度条
+								this->update();
+								i++;
 							}
-							else
-							{
-								m_ui->label->setText(QStringLiteral("清空表数据失败"));
-							}
+							m_ui->label->setText(QStringLiteral("重新排序成功"));
+						}
+						else
+						{
+							m_ui->label->setText(QStringLiteral("清空表数据失败"));
 						}
 					}
-				});
+				}
+			});
 		//delete
 		connect(m_ui->pushButton_delete2, &QPushButton::clicked, this, [=]
 			{
@@ -399,7 +399,7 @@ void QtWidgetsApplication::IniUI()
 							QStandardItem* item3 = new QStandardItem(query.value(2).toString());
 							QStandardItem* item4 = new QStandardItem(query.value(3).toString());
 							newRowItems << item1 << item2 << item3 << item4;
-							
+
 							// 插入新行到模型中
 							header_model->insertRow(header_model->rowCount(), newRowItems);
 						}
@@ -411,7 +411,7 @@ void QtWidgetsApplication::IniUI()
 				}
 			});
 	}
-	else 
+	else
 	{
 		m_ui->label->setText(QStringLiteral("数据库链接失败"));
 	}
